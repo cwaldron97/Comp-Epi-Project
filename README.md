@@ -1,5 +1,7 @@
 # Comp-Epi-Project
 
+## Top Priorities
+
 ## Potential Data Sources
 [NYC and Tokyo Check-in Dataset](https://sites.google.com/site/yangdingqi/home/foursquare-dataset?fbclid=IwAR3siQW3KR3sx-MslavAVwOxHmFJy6YoRDJDSjAuiyS5NNgErauBjSAj9ow#h.p_ID_46)
 
