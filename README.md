@@ -22,7 +22,7 @@
 [NYC Pedestrian Data](https://data.cityofnewyork.us/Transportation/Bi-Annual-Pedestrian-Counts/2de2-6x2h)  
 
 ## Cites for research and writeup
-[Original Paper Written about the data](http://www-public.imtbs-tsp.eu/~zhang_da/pub/TSMC_YANG_2014.pdf)  
+[Modeling User Activity Preference by Leveraging User Spatial Temporal Characteristics in LBSNs](http://www-public.imtbs-tsp.eu/~zhang_da/pub/TSMC_YANG_2014.pdf)  
 [How urbanization affects the epidemiology of emerging infectious diseases](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4481042/?fbclid=IwAR15JlnpUVCxCTK5mL7Q1xE1J2Npcuq8xar8zCPTaP_fHQksJakGq3d-LJw)  
 [Understanding Infectious Disease Transmission in Urban Built Environments](https://www.ncbi.nlm.nih.gov/books/NBK507339/?fbclid=IwAR2_IiTsDD-nAapQjVdXc9H0z0e4qWeTEdW-yr_ni-EdkbSjNNX10NDYWQI)
 [Mathematical Modeling of Infectious Disease Dynamics](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3710332/?fbclid=IwAR36rvyQojKs3p_isAxXUnZDBsmKBt3kH9vaun5H4ap_8G19PsaqaIYULOo)  
