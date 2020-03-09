@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import geopandas
+from geopy.distance import geodesic
 
 
 PLOT = False
@@ -49,6 +50,10 @@ def plot_data(df, gdf, shape_filename, figure):
     )
     gdf.plot(ax=shape, color="red", markersize=0.1)
     plt.figure(figure)
+
+
+def distance(p1, p2):
+    return geodesic(p1, p2).meters
 
 
 # process_data("data/dataset_TSMC2014_NYC.txt", "data/NYC.txt")

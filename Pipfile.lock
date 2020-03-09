@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f936fa4b815de17511bf806b26be8f050817d1739d2ac940c24cc7cb5a47fcf6"
+            "sha256": "9e17e5f23ebadd043e1322489d8e84b834a46719064a46ee8325d5790396027c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -77,6 +77,13 @@
             ],
             "version": "==1.8.13.post1"
         },
+        "geographiclib": {
+            "hashes": [
+                "sha256:12bd46ee7ec25b291ea139b17aa991e7ef373e21abd053949b75c0e9ca55c632",
+                "sha256:51cfa698e7183792bce27d8fb63ac8e83689cd8170a730bf35e1a5c5bf8849b9"
+            ],
+            "version": "==1.50"
+        },
         "geopandas": {
             "hashes": [
                 "sha256:19074b090ab928527193c50b383d31a259a9b84b18553562631295fa67f640bc",
@@ -84,6 +91,14 @@
             ],
             "index": "pypi",
             "version": "==0.7.0"
+        },
+        "geopy": {
+            "hashes": [
+                "sha256:5de6fed0ee982e43a8e4243410477567cfccac22f8530edffc422761adf4e612",
+                "sha256:dc02b43ca5202696907b6b4f72431c8df455c812889dbb4e1240a672857f3adc"
+            ],
+            "index": "pypi",
+            "version": "==1.21.0"
         },
         "kiwisolver": {
             "hashes": [
