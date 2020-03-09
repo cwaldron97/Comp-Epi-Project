@@ -1,5 +1,14 @@
 # Comp-Epi-Project
 
+## Getting Started
+
+```bash
+$ pip install pipenv
+$ pipenv install --dev
+$ pipenv shell
+$ python main.py
+```
+
 ## Top Priorities
 
 ## Potential Data Sources
