@@ -22,7 +22,10 @@ $ python main.py
 When VSCode asks to use an autoformatter, select `black`.
 
 ## Top Priorities
-
+1. Construct updated model with described compartments in GLEAMviz
+2. Map out hospitals in correlation to NTA locations 
+3. Assign hospitals bed values and fill in missing Lat/Long coordinates
+4. Establish node characteristics and optimizing hospital priorization
 
 ## Data Sources
 
