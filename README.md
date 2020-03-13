@@ -29,15 +29,15 @@ When VSCode asks to use an autoformatter, select `black`.
 
 ## Data Sources
 
-[1](https://data.cityofnewyork.us/City-Government/Neighborhood-Tabulation-Areas-NTA-/cpf4-rkhq)  
-[2](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0016591)  
-[3](https://data.cityofnewyork.us/City-Government/Census-Demographics-at-the-Neighborhood-Tabulation/rnsn-acs2)  
-[4](https://sites.google.com/site/yangdingqi/home/foursquare-dataset#h.p_ID_46)  
-[5](https://data.cityofnewyork.us/Health/NYC-Health-Hospitals-Facilities-2011/ymhw-9cz9)  
-[6](https://profiles.health.ny.gov/hospital/bed_type/Intensive+Care+Beds)  
-[7](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3034199/)  
-[8](https://public.tableau.com/profile/nyc.health#!/vizhome/NewYorkCityNeighborhoodHealthAtlas/Home)  
-[9](https://www.ncbi.nlm.nih.gov/books/NBK126700/)  
+[1. New York City NTA GIS Data](https://data.cityofnewyork.us/City-Government/Neighborhood-Tabulation-Areas-NTA-/cpf4-rkhq)  
+[2. Human Mobility Networks, Travel Restrictions, and the Global Spread of 2009 H1N1 Pandemic](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0016591)  
+[3. Census Demographics at the NTA level](https://data.cityofnewyork.us/City-Government/Census-Demographics-at-the-Neighborhood-Tabulation/rnsn-acs2)  
+[4. NYC and Tokyo FourSquare Check-in Dataset](https://sites.google.com/site/yangdingqi/home/foursquare-dataset#h.p_ID_46)  
+[5. NYC Health and Hospital Facilities Location Data](https://data.cityofnewyork.us/Health/NYC-Health-Hospitals-Facilities-2011/ymhw-9cz9)  
+[6. New York Hospital Bed Counts](https://profiles.health.ny.gov/hospital/bed_type/Intensive+Care+Beds)  
+[7. The infection attack rate and severity of 2009 pandemic influenza (H1N1) in Hong Kong](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3034199/)  
+[8. NYC NTA Age Bracket Breakdown](https://public.tableau.com/profile/nyc.health#!/vizhome/NewYorkCityNeighborhoodHealthAtlas/Home)  
+[9. Emergency Department Visits and Hospital Inpatient Stays for Seasonal and 2009 H1N1 Influenza, 2008–2009](https://www.ncbi.nlm.nih.gov/books/NBK126700/)  
 
 
 
