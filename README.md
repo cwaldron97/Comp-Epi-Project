@@ -28,17 +28,17 @@ When VSCode asks to use an autoformatter, select `black`.
 
 ## Potential Data Sources
 
-[NYC and Tokyo Check-in Dataset](https://sites.google.com/site/yangdingqi/home/foursquare-dataset?fbclid=IwAR3siQW3KR3sx-MslavAVwOxHmFJy6YoRDJDSjAuiyS5NNgErauBjSAj9ow#h.p_ID_46)  
-[Tokyo Train Mapping](https://github.com/Jugendhackt/tokyo-metro-data)  
-[Variety of Datasets of Transportation in Tokyo](https://tokyochallenge.odpt.org/en/#b)  
-[Tokyo Public Wifi Locations](https://catalog.data.metro.tokyo.lg.jp/dataset/t132292d0000000003?fbclid=IwAR3l_wYbcVWBJK9q5tBuVA9ELSV4YpkxPhidrGC03Nsw97dLhrZI1nmvMD8)  
-[Survey on the incidence of Tokyo infectious disease](https://catalog.data.metro.tokyo.lg.jp/dataset/t000010d1800000052?fbclid=IwAR2rIC1k6CW3Vhd0soygqW1-En-6LPF_NdfoVS3wwn68Krt6XEE4oKoOjXQ)  
-[Yearly Action plan for new Influenza Strains in Tokyo](https://catalog.data.metro.tokyo.lg.jp/dataset/t000003d1700000048?fbclid=IwAR1dcaJAe6vkKuWeC7On2lOuwOWYqQUjbhzZnxuv9v47ytvKck70iPqiTZk)  
-[Toei Subway Human movement dataset split by line](https://catalog.data.metro.tokyo.lg.jp/dataset/t000018d0000000036?fbclid=IwAR1dcaJAe6vkKuWeC7On2lOuwOWYqQUjbhzZnxuv9v47ytvKck70iPqiTZk)  
-[NYC Health and Hospital Patient Care Locations](https://data.cityofnewyork.us/Health/NYC-Health-Hospitals-patient-care-locations-2011/f7b6-v6v3)  
-[Map Data of NYC subway stations](https://data.cityofnewyork.us/Transportation/Subway-Stations/arq3-7z49)  
-[NYC Traffic Vehicle Data](https://data.cityofnewyork.us/Transportation/Traffic-Volume-Counts-2014-2018-/ertz-hr4r)  
-[NYC Pedestrian Data](https://data.cityofnewyork.us/Transportation/Bi-Annual-Pedestrian-Counts/2de2-6x2h)  
+[1](https://data.cityofnewyork.us/City-Government/Neighborhood-Tabulation-Areas-NTA-/cpf4-rkhq)  
+[2](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0016591)  
+[3](https://data.cityofnewyork.us/City-Government/Census-Demographics-at-the-Neighborhood-Tabulation/rnsn-acs2)  
+[4](https://sites.google.com/site/yangdingqi/home/foursquare-dataset#h.p_ID_46)  
+[5](https://data.cityofnewyork.us/Health/NYC-Health-Hospitals-Facilities-2011/ymhw-9cz9)  
+[6](https://profiles.health.ny.gov/hospital/bed_type/Intensive+Care+Beds)  
+[7](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3034199/)  
+[8](https://public.tableau.com/profile/nyc.health#!/vizhome/NewYorkCityNeighborhoodHealthAtlas/Home)  
+[9](https://www.ncbi.nlm.nih.gov/books/NBK126700/)  
+
+
 
 ## Cities for research and writeup
 
