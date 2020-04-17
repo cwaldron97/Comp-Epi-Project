@@ -54,6 +54,6 @@ NTAs = read_data("New York Pop NTA updated.csv")
 
 # plt.show()
 
-s = Simulation(NTAs, None, num_ticks=365)
+s = Simulation(NTAs, None, num_ticks=50)
 
 s.run()
