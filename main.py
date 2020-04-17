@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import geopandas
-from geopy.distance import geodesic
 
 
 PLOT = False
@@ -37,8 +36,6 @@ def create_gdf(df):
 
 
 def plot_data(df, gdf, shape_filename, figure):
-    global PLOT
-    PLOT = True
     bbox = (
         min(df.longitude) - 0.001,
         min(df.latitude) - 0.001,
@@ -52,26 +49,17 @@ def plot_data(df, gdf, shape_filename, figure):
     plt.figure(figure)
 
 
-def distance(p1, p2):
-    return geodesic(p1, p2).meters
-
-
-# process_data("data/dataset_TSMC2014_NYC.txt", "data/NYC.txt")
-# process_data("data/dataset_TSMC2014_TKY.txt", "data/TKY.txt")
+process_data("data/dataset_TSMC2014_NYC.txt", "data/NYC.txt")
 
 df_NYC = read_data("data/NYC.txt")
-df_TKY = read_data("data/TKY.txt")
+
+print(f"NYC: {len(df_NYC)}")
 
 print(f"NYC Latitude\nMax: {max(df_NYC.latitude)}\tMin:{min(df_NYC.latitude)}\n")
 print(f"NYC Longitude\nMax: {max(df_NYC.longitude)}\tMin:{min(df_NYC.longitude)}\n")
-print(f"TKY Latitude\nMax: {max(df_TKY.latitude)}\tMin:{min(df_TKY.latitude)}\n")
-print(f"TKY Longitude\nMax: {max(df_TKY.longitude)}\tMin:{min(df_TKY.longitude)}\n")
 
 gdf_NYC = create_gdf(df_NYC)
-gdf_TKY = create_gdf(df_TKY)
 
 plot_data(df_NYC, gdf_NYC, "data/shapes/gadm36_USA.gpkg", 1)
-plot_data(df_TKY, gdf_TKY, "data/shapes/gadm36_JPN.gpkg", 2)
 
-if PLOT:
-    plt.show()
+plt.show()

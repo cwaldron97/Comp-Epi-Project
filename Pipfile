@@ -13,6 +13,7 @@ descartes = "*"
 geopandas = "*"
 shapely = "*"
 geopy = "*"
+xlrd = "*"
 
 [requires]
 python_version = "3.7"
