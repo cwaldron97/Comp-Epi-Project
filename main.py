@@ -1,65 +1,59 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import geopandas
 
-
-PLOT = False
-
-
-def process_data(input_file, output_file, headers=["latitude", "longitude"]):
-    data = pd.read_csv(input_file, sep="\t", header=None, encoding="ISO-8859-1")
-    data.columns = [
-        "user_id",
-        "venue_id",
-        "venue_category_id",
-        "venue_category_name",
-        "latitude",
-        "longitude",
-        "tz_offset",
-        "utc",
-    ]
-    data = data.drop(list(set(data.columns) - set(headers)), axis=1)
-    data.to_csv(output_file, header=None, index=None, sep=" ")
+from models import Simulation, NTAGraphNode, DiseaseModel
 
 
 def read_data(filename):
-    df = pd.read_csv(filename, sep=" ", header=None, encoding="ISO-8859-1")
-    df.columns = ["latitude", "longitude"]
+    df = pd.read_csv(filename, sep=",", header=None, encoding="ISO-8859-1")
+    # Remove extraneous commas/columns after population
+    df = df.loc[:, :5]
+    # Remove year and county code
+    df = df.drop([1, 2], axis=1)
+    # Rename columns to use for indexing
+    df.columns = ["borough", "nta_code", "nta_name", "population"]
     return df
 
 
-def create_gdf(df):
-    return geopandas.GeoDataFrame(
-        df, geometry=geopandas.points_from_xy(df.longitude, df.latitude)
-    )
+def write_parsed_data(df, filename):
+    with open(filename, "w") as f:
+        for row in df.itertuples(index=False, name=None):
+            f.write("{}\n".format(row))
 
 
-def plot_data(df, gdf, shape_filename, figure):
-    bbox = (
-        min(df.longitude) - 0.001,
-        min(df.latitude) - 0.001,
-        max(df.longitude) + 0.001,
-        max(df.latitude) + 0.001,
-    )
-    shape = geopandas.read_file(shape_filename, bbox=bbox).plot(
-        color="white", edgecolor="black"
-    )
-    gdf.plot(ax=shape, color="red", markersize=0.1)
-    plt.figure(figure)
+# def create_gdf(df):
+#     return geopandas.GeoDataFrame(
+#         df, geometry=geopandas.points_from_xy(df.longitude, df.latitude)
+#     )
 
 
-process_data("data/dataset_TSMC2014_NYC.txt", "data/NYC.txt")
+# def plot_data(df, gdf, shape_filename, figure):
+#     bbox = (
+#         min(df.longitude) - 0.001,
+#         min(df.latitude) - 0.001,
+#         max(df.longitude) + 0.001,
+#         max(df.latitude) + 0.001,
+#     )
+#     shape = geopandas.read_file(shape_filename, bbox=bbox).plot(
+#         color="white", edgecolor="black"
+#     )
+#     gdf.plot(ax=shape, color="red", markersize=0.1)
+#     plt.figure(figure)
 
-df_NYC = read_data("data/NYC.txt")
+NTAs = read_data("New York Pop NTA updated.csv")
+# write_parsed_data(NTAs, "NTAs.txt")
 
-print(f"NYC: {len(df_NYC)}")
+# print(f"NYC: {len(NTAs)}")
 
-print(f"NYC Latitude\nMax: {max(df_NYC.latitude)}\tMin:{min(df_NYC.latitude)}\n")
-print(f"NYC Longitude\nMax: {max(df_NYC.longitude)}\tMin:{min(df_NYC.longitude)}\n")
+# print(f"NYC Latitude\nMax: {max(NTAs.)}\tMin:{min(NTAs.latitude)}\n")
+# print(f"NYC Longitude\nMax: {max(NTAs.longitude)}\tMin:{min(NTAs.longitude)}\n")
 
-gdf_NYC = create_gdf(df_NYC)
+# gNTAs = create_gdf(NTAs)
 
-plot_data(df_NYC, gdf_NYC, "data/shapes/gadm36_USA.gpkg", 1)
+# plot_data(NTAs, gNTAs, "data/shapes/gadm36_USA.gpkg", 1)
 
-plt.show()
+# plt.show()
+
+s = Simulation(NTAs, None, num_ticks=365)
+
+s.run()
