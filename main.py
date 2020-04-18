@@ -15,6 +15,17 @@ def read_data(filename):
     return df
 
 
+def read_data2(filename):
+    df = pd.read_csv(filename, sep=",", header=None, encoding="ISO-8859-1")
+    # Remove extraneous commas/columns after population
+    df = df.loc[:, :7]
+    # Remove year and county code
+    df = df.drop([1, 2], axis=1)
+    # Rename columns to use for indexing
+    df.columns = ["borough", "nta_code", "nta_name", "population", "lat", "long"]
+    return df
+
+
 def write_parsed_data(df, filename):
     with open(filename, "w") as f:
         for row in df.itertuples(index=False, name=None):
@@ -40,7 +51,8 @@ def write_parsed_data(df, filename):
 #     gdf.plot(ax=shape, color="red", markersize=0.1)
 #     plt.figure(figure)
 
-NTAs = read_data("New York Pop NTA updated.csv")
+# NTAs = read_data("New York Pop NTA updated.csv")
+NTAs = read_data2("test-NTAs.csv")
 # write_parsed_data(NTAs, "NTAs.txt")
 
 # print(f"NYC: {len(NTAs)}")

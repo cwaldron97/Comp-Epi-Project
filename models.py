@@ -143,10 +143,10 @@ class DiseaseModel:
 
 class NTAGraphNode:
     def __init__(self, info, num_ticks, seed_num=None):
-        # Info looks like ('Borough', 'NTA ID', 'NTA Name', 'Population')
+        # Info looks like ('Borough', 'NTA ID', 'NTA Name', 'Population', 'Centroid Lat', 'Centroid Long')
         self.model = DiseaseModel(int(info[3]), num_ticks)
         # Tuple (lat, long)
-        # self.centroid = centroid
+        self.centroid = (float(info[4]), float(info[5]))
         self.info = info
         self.neighbors = []
 
@@ -158,7 +158,10 @@ class NTAGraphNode:
         self.model.history["I_S"][0] += num
 
     def distance_in_meters(self, other_point):
-        return geodesic(self.center, other_point).meters
+        return geodesic(self.centroid, other_point).meters / 1000
+
+    def __str__(self):
+        return "{} ({})".format(self.info[2], self.info[1])
 
 
 class Simulation:
@@ -181,5 +184,15 @@ class Simulation:
         #         node.model.update(i)
         for i in range(self.num_ticks):
             self.nodes[0].model.update(i)
-        print(self.nodes[0].model.history)
-        self.nodes[0].model.plot_history()
+        # self.nodes[0].model.plot_history()
+        distances = []
+        for n in self.nodes:
+            for k in self.nodes:
+                if n != k:
+                    distances.append(n.distance_in_meters(k.centroid))
+                    print(
+                        "[{} -> {}]\t\t\t".format(n, k),
+                        n.distance_in_meters(k.centroid),
+                    )
+        print(min(distances))
+        print(max(distances))
