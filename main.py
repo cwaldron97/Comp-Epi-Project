@@ -6,23 +6,18 @@ from models import Simulation, NTAGraphNode, DiseaseModel
 
 def read_data(filename):
     df = pd.read_csv(filename, sep=",", header=None, encoding="ISO-8859-1")
-    # Remove extraneous commas/columns after population
-    df = df.loc[:, :5]
-    # Remove year and county code
-    df = df.drop([1, 2], axis=1)
+    # Remove extraneous commas/columns after last column
+    df = df.loc[:, :6]
     # Rename columns to use for indexing
-    df.columns = ["borough", "nta_code", "nta_name", "population"]
-    return df
-
-
-def read_data2(filename):
-    df = pd.read_csv(filename, sep=",", header=None, encoding="ISO-8859-1")
-    # Remove extraneous commas/columns after population
-    df = df.loc[:, :7]
-    # Remove year and county code
-    df = df.drop([1, 2], axis=1)
-    # Rename columns to use for indexing
-    df.columns = ["borough", "nta_code", "nta_name", "population", "lat", "long"]
+    df.columns = [
+        "borough",
+        "nta_code",
+        "nta_name",
+        "population",
+        "lat",
+        "long",
+        "hospitalization_rate",
+    ]
     return df
 
 
@@ -51,21 +46,8 @@ def write_parsed_data(df, filename):
 #     gdf.plot(ax=shape, color="red", markersize=0.1)
 #     plt.figure(figure)
 
-# NTAs = read_data("New York Pop NTA updated.csv")
-NTAs = read_data2("test-NTAs.csv")
-# write_parsed_data(NTAs, "NTAs.txt")
+NTAs = read_data("New York Pop NTA updated.csv")
 
-# print(f"NYC: {len(NTAs)}")
-
-# print(f"NYC Latitude\nMax: {max(NTAs.)}\tMin:{min(NTAs.latitude)}\n")
-# print(f"NYC Longitude\nMax: {max(NTAs.longitude)}\tMin:{min(NTAs.longitude)}\n")
-
-# gNTAs = create_gdf(NTAs)
-
-# plot_data(NTAs, gNTAs, "data/shapes/gadm36_USA.gpkg", 1)
-
-# plt.show()
-
-s = Simulation(NTAs, None, num_ticks=50)
+s = Simulation(NTAs, None, num_ticks=5)
 
 s.run()
