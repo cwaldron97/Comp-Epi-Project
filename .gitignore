@@ -3,3 +3,4 @@ data/**
 
 NTAs.txt
 hospitals.txt
+__pycache__
