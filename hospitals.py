@@ -89,30 +89,32 @@ gdf2 = gpd.GeoDataFrame(
 ##################
 # choropleth WIP #
 ##################
-# NTAs_d = dict(gdf2)
-# shape_d = dict(shape)
-# for i, ntacode in shape_d["ntacode"].items():
-#     indexes = [k for k, v in NTAs_d["nta_code"].items() if ntacode == v]
-#     if indexes:
-#         index = indexes.pop()
-#         NTAs_d["geometry"][index] = shape_d["geometry"][i]
-#     else:
-#         print(ntacode)
+NTAs_d = dict(gdf2)
+shape_d = dict(shape)
+for i, ntacode in NTAs_d["nta_code"].items():
+    indexes = [k for k, v in shape_d["ntacode"].items() if ntacode == v]
+    if indexes:
+        assert len(indexes) == 1
+        index = indexes.pop()
+        NTAs_d["geometry"][i] = shape_d["geometry"][index]
+    else:
+        print(ntacode, shape_d["ntaname"][i])
 
-# new_NTAs = pd.DataFrame(NTAs_d)
+new_NTAs = pd.DataFrame(NTAs_d)
 
-# gdf3 = gpd.GeoDataFrame(new_NTAs, geometry=new_NTAs.geometry)
-# print(gdf3.head(100))
+gdf3 = gpd.GeoDataFrame(new_NTAs, geometry=new_NTAs.geometry)
+print(gdf3.head(100))
 
-# # show_kdeplot(shape, gdf)
-# print(shape.head())
-# print(gdf2.head())
+# show_kdeplot(shape, gdf)
 
-# geoplot.polyplot(
-#     gdf3,
-#     projection=geoplot.crs.AlbersEqualArea(),
-#     hue="hospitalization_rate",
-#     cmap="Greens",
-# )
+geoplot.choropleth(
+    gdf3,
+    projection=geoplot.crs.AlbersEqualArea(),
+    hue="hospitalization_rate",
+    cmap="Greens",
+    legend=True,
+    edgecolor="black",
+    linewidth=1,
+)
 
-# plt.show()
+plt.show()
