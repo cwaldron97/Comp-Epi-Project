@@ -28,60 +28,91 @@ def read_hospital_data(filename):
     return df
 
 
+def read_nta_data(filename):
+    df = pd.read_csv(filename, sep=",", header=None, encoding="ISO-8859-1")
+    # Remove extraneous commas/columns after last column
+    df = df.loc[:, :6]
+    # Rename columns to use for indexing
+    df.columns = [
+        "borough",
+        "nta_code",
+        "nta_name",
+        "population",
+        "lat",
+        "long",
+        "hospitalization_rate",
+    ]
+    df["lat"] = df.lat.astype(float)
+    df["long"] = df.long.astype(float)
+    df["hospitalization_rate"] = df.hospitalization_rate.astype(float)
+    return df
+
+
 def write_parsed_data(df, filename):
     with open(filename, "w") as f:
         for row in df.itertuples(index=False, name=None):
             f.write("{}\n".format(row))
 
 
-# def heatmap(d, bins=(100, 100), smoothing=1.3, cmap="jet"):
-#     def getx(pt):
-#         return pt.coords[0][0]
+def show_kdeplot(shape, gdf):
+    ax = geoplot.polyplot(shape, projection=geoplot.crs.AlbersEqualArea(), zorder=1)
+    geoplot.kdeplot(
+        gdf,
+        ax=ax,
+        shade=True,
+        cmap="Reds",
+        n_levels=16,
+        shade_lowest=True,
+        clip=shape.simplify(0.001, preserve_topology=False),
+    )
+    geoplot.pointplot(gdf, ax=ax, color="blue")
 
-#     def gety(pt):
-#         return pt.coords[0][1]
-
-#     x = list(d.geometry.apply(getx))
-#     y = list(d.geometry.apply(gety))
-#     heatmap, xedges, yedges = np.histogram2d(y, x, bins=bins)
-#     extent = [yedges[0], yedges[-1], xedges[-1], xedges[0]]
-
-#     logheatmap = np.log(heatmap)
-#     logheatmap[np.isneginf(logheatmap)] = 0
-#     logheatmap = ndimage.filters.gaussian_filter(logheatmap, smoothing, mode="nearest")
-
-#     plt.imshow(logheatmap, cmap=cmap, extent=extent)
-#     plt.colorbar()
-#     plt.gca().invert_yaxis()
-#     plt.show()
+    plt.show()
 
 
+NTAs = read_nta_data("New York Pop NTA updated.csv")
 hospitals = read_hospital_data("NYC Hospital Locations Filled.csv")
 zipfile = "zip:///home/kevin/code/Comp-Epi-Project/shape/shapefile.zip"
 shape = gpd.read_file(zipfile)
 
-boroughs = gpd.read_file(geoplot.datasets.get_path("nyc_boroughs"))
 
-
-# f, ax = plt.subplots(1)
-# shape.plot(ax=ax)
 gdf = gpd.GeoDataFrame(
     hospitals,
     geometry=gpd.points_from_xy(hospitals["long"], hospitals["lat"]),
     crs="epsg:4326",
 )
-# heatmap(gdf, bins=200, smoothing=1.5)
 
-ax = geoplot.polyplot(shape, projection=geoplot.crs.AlbersEqualArea(), zorder=1)
-geoplot.kdeplot(
-    gdf,
-    ax=ax,
-    shade=True,
-    cmap="Reds",
-    n_levels=16,
-    shade_lowest=True,
-    clip=shape.simplify(0.001, preserve_topology=False),
+
+gdf2 = gpd.GeoDataFrame(
+    NTAs, geometry=gpd.points_from_xy(NTAs["long"], NTAs["lat"]), crs="epsg:4326",
 )
-geoplot.pointplot(gdf, ax=ax, color="blue")
+##################
+# choropleth WIP #
+##################
+# NTAs_d = dict(gdf2)
+# shape_d = dict(shape)
+# for i, ntacode in shape_d["ntacode"].items():
+#     indexes = [k for k, v in NTAs_d["nta_code"].items() if ntacode == v]
+#     if indexes:
+#         index = indexes.pop()
+#         NTAs_d["geometry"][index] = shape_d["geometry"][i]
+#     else:
+#         print(ntacode)
 
-plt.show()
+# new_NTAs = pd.DataFrame(NTAs_d)
+
+# gdf3 = gpd.GeoDataFrame(new_NTAs, geometry=new_NTAs.geometry)
+# print(gdf3.head(100))
+
+# # show_kdeplot(shape, gdf)
+# print(shape.head())
+# print(gdf2.head())
+
+# geoplot.polyplot(
+#     gdf3,
+#     projection=geoplot.crs.AlbersEqualArea(),
+#     hue="hospitalization_rate",
+#     cmap="Greens",
+# )
+
+# plt.show()

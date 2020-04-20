@@ -370,10 +370,8 @@ class Simulation:
 
     def init_graph_nodes(self, df):
         iterator = df.itertuples(index=False, name=None)
-        next(iterator)  # skip the first line containing the headers
-        nodes = {
-            row[1]: NTAGraphNode(row, self.num_ticks) for row in iterator
-        }  # Seed nodes
+        nodes = {row[1]: NTAGraphNode(row, self.num_ticks) for row in iterator}
+        # Seed nodes
         # nodes["QN29"].seed(1000)
         # nodes["QN30"].seed(1000)
         # nodes["QN31"].seed(1000)
