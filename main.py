@@ -32,18 +32,18 @@ def write_parsed_data(df, filename):
 
 NTAs = read_data("New York Pop NTA updated.csv")
 
-s = Simulation(NTAs, None, num_ticks=81)
+s = Simulation(NTAs, None, num_ticks=121)
 
 s.run()
 
-for n_id, n in s.nodes.items():
-    pop = n.model.population
-    day20 = n.model.history["R"][20] / pop
-    day40 = n.model.history["R"][40] / pop
-    day60 = n.model.history["R"][60] / pop
-    day80 = n.model.history["R"][80] / pop
-    print(
-        "{}:\n\t20: {}\n\t40: {}\n\t60: {}\n\t80: {}\n".format(
-            n_id, day20, day40, day60, day80
-        )
-    )
+# for n_id, n in s.nodes.items():
+#     pop = n.model.population
+#     day20 = n.model.history["R"][20] / pop
+#     day40 = n.model.history["R"][40] / pop
+#     day60 = n.model.history["R"][60] / pop
+#     day80 = n.model.history["R"][80] / pop
+#     print(
+#         "{}:\n\t20: {}\n\t40: {}\n\t60: {}\n\t80: {}\n".format(
+#             n_id, day20, day40, day60, day80
+#         )
+#     )

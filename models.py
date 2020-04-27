@@ -5,6 +5,7 @@ import pandas as pd
 from pprint import pprint, pformat
 from decimal import *
 from numpy.random import rand
+import json
 
 
 CONSTANTS = {
@@ -132,7 +133,7 @@ class DiseaseModel:
         I_A_t = Decimal(self.history["I_A"][t])
         R_t = Decimal(self.history["R"][t])
 
-        NUM_TO_BATCH = 50
+        NUM_TO_BATCH = 10
 
         ##########################
         # Susceptible --> Latent #
@@ -273,8 +274,8 @@ class NTAGraphNode:
         self.id = info[1]
         self.hospitalization_rate = float(info[6])
 
-        self.s_movement_factor = Decimal(0.25)
-        self.as_movement_factor = Decimal(0.75)
+        self.s_movement_factor = Decimal(0.2)
+        self.as_movement_factor = Decimal(0.8)
         self.distances_normalized = None
         self.movement_restriction = Decimal(1.0)
 
@@ -375,8 +376,23 @@ class Simulation:
         # nodes["QN29"].seed(1000)
         # nodes["QN30"].seed(1000)
         # nodes["QN31"].seed(1000)
-        nodes["MN25"].seed(1000)
+        # nodes["MN25"].seed(1000)
+
+        # Central location
+        nodes["QN20"].seed(1000)
+
         return nodes
+
+    def write_out_history(self):
+        with open("simulation-results.csv", "w") as f:
+            for n in self.nodes.values():
+                cleaned = n.model.history
+                cleaned["S"] = [round(v) for v in cleaned["S"]]
+                cleaned["E"] = [round(v) for v in cleaned["E"]]
+                cleaned["I_S"] = [round(v) for v in cleaned["I_S"]]
+                cleaned["I_A"] = [round(v) for v in cleaned["I_A"]]
+                cleaned["R"] = [round(v) for v in cleaned["R"]]
+                f.write("{}|{}\n".format(n.id, cleaned))
 
     def run(self):
         # global RANDS
@@ -425,21 +441,21 @@ class Simulation:
                 aggregate_history["I_A"][i] += node.model.history["I_A"][i]
                 aggregate_history["R"][i] += node.model.history["R"][i]
 
-        pprint(aggregate_history)
-        # # Graph for all of New York
-        fig, axs = plt.subplots(3)
+        fig, axs = plt.subplots(2, 2)
 
         make_compartment_charts(
-            pd.DataFrame(aggregate_history), self.num_ticks, axs[0], "All of NYC"
+            pd.DataFrame(aggregate_history), self.num_ticks, axs[0][0], "All of NYC"
         )
 
-        self.nodes["QN12"].model.plot_history(axs[1], "QN12 (other side of NYC)")
-        pprint(self.nodes["QN12"].model.history)
-        self.nodes["MN25"].model.plot_history(axs[2], "MN25 (seed)")
-        pprint(self.nodes["MN25"].model.history)
+        self.nodes["QN20"].model.plot_history(axs[0][1], "QN20 - Ridgewood (seed)")
+        self.nodes["SI48"].model.plot_history(
+            axs[1][0], "SI48 - Arden Heights (low pop)"
+        )
+        self.nodes["BK88"].model.plot_history(
+            axs[1][1], "BK88 - Borough Park (high pop)"
+        )
 
         fig.suptitle("Compartment Population vs Time")
         plt.show()
-        # self.nodes["QN30"].model.plot_history()
-        # self.nodes["QN31"].model.plot_history()
-        # self.nodes["QN54"].model.plot_history()
+
+        self.write_out_history()
