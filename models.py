@@ -11,13 +11,15 @@ import multiprocessing
 
 
 # Number of days to run the simulation for
-NUM_TICKS = 120
+NUM_TICKS = 60
 BOUND = NUM_TICKS
-NUM_TO_BATCH = 100
+NUM_TO_BATCH = 50
+TERTIARY_CARE_THRESHOLD = 60  # 62, 85, 85, 99, 161 are the highest bed counts
 
-
-AVG_LATENCY_PERIOD = 5.1
-AVG_INFECTIOUS_PERIOD = 13.25
+# AVG_LATENCY_PERIOD = 5.1
+# AVG_INFECTIOUS_PERIOD = 13.25
+AVG_LATENCY_PERIOD = 1.1
+AVG_INFECTIOUS_PERIOD = 2.5
 CONSTANTS = {
     "beta": 0.8383,
     "epsilon": 1 / AVG_LATENCY_PERIOD,
@@ -30,12 +32,12 @@ CONSTANTS = {
 }
 
 # Slider for the hospital distance radius, social distancing factor, and travel radius
-MOVEMENT_RESTRICTION = 1.0
+MOVEMENT_RESTRICTION = 0.5
 # MOVEMENT_RESTRICTION = 0.5
 
 # The proportion of the individuals in an NTA will actually move to other NTAs during a given day
 BASE_MOVEMENT_FACTOR = 0.5
-I_S_MOVEMENT_FACTOR = BASE_MOVEMENT_FACTOR * 0.25
+I_S_MOVEMENT_FACTOR = BASE_MOVEMENT_FACTOR * 0.5
 I_A_MOVEMENT_FACTOR = BASE_MOVEMENT_FACTOR
 
 # Parameter scaling transmissibility depending on the season we wish to model
@@ -44,6 +46,9 @@ SEASONALITY_FACTOR = 1
 # Percent asymptomatic carriers (when seeding)
 PERCENT_ASYMPTOMATIC = 0.5
 
+# Temp variable to estimate hospitalizations
+TOTAL_HOSPITALIZED = 0
+
 
 class Compartment(Enum):
     susceptible = "S"
@@ -51,6 +56,8 @@ class Compartment(Enum):
     infectious_symptomatic = "I_S"
     infectious_asymptomatic = "I_A"
     recovered = "R"
+    needs_hospitalization = "NH"
+    hospitalized = "H"
     dead = "D"
 
     def __str__(self):
@@ -119,11 +126,12 @@ def make_compartment_charts(df, ax, title):
 
 
 class Individual:
-    def __init__(self, num, nta_id, size):
+    def __init__(self, num, nta_id, size, hospitalization_rate):
         self.compartment = Compartment.susceptible
         self.id = num
         self.home_nta = nta_id
         self.size = size
+        self.hospitalization_rate = hospitalization_rate
 
     def transition(self, CONTACT_SYMPTOMATIC, CONTACT_ASYMPTOMATIC):
         # if CONTACT_ASYMPTOMATIC > 0 or CONTACT_ASYMPTOMATIC > 0:
@@ -188,6 +196,11 @@ class Individual:
         elif roll < threshold2:
             self.compartment = Compartment.infectious_symptomatic
 
+        global TOTAL_HOSPITALIZED
+        critical_threshold = round(self.hospitalization_rate, 3) * 100000
+        if randint(0, 100000) < critical_threshold:
+            TOTAL_HOSPITALIZED += NUM_TO_BATCH
+
     def recover(self):
         # threshold = round(CONSTANTS["mu"] * (1 / NUM_TO_BATCH), 5) * 10000
         threshold = round(CONSTANTS["mu"], 5) * 10000
@@ -215,13 +228,13 @@ class Individual:
 
 
 class DiseaseModel:
-    def __init__(self, population, nta_id):
+    def __init__(self, population, nta_id, hospitalization_rate):
         self.overflow = population % NUM_TO_BATCH
         self.population = population
         if self.overflow != 0:
             self.population += NUM_TO_BATCH - self.overflow
         self.individuals = [
-            Individual(i, nta_id, NUM_TO_BATCH)
+            Individual(i, nta_id, NUM_TO_BATCH, hospitalization_rate)
             for i in range(0, self.population + 1, NUM_TO_BATCH)
         ]
         self.history = {
@@ -230,6 +243,8 @@ class DiseaseModel:
             Compartment.infectious_symptomatic: [0 for t in range(0, BOUND)],
             Compartment.infectious_asymptomatic: [0 for t in range(0, BOUND)],
             Compartment.recovered: [0 for t in range(0, BOUND)],
+            Compartment.needs_hospitalization: [0 for t in range(0, BOUND)],
+            Compartment.hospitalized: [0 for t in range(0, BOUND)],
             Compartment.dead: [0 for t in range(0, BOUND)],
         }
 
@@ -256,7 +271,26 @@ class DiseaseModel:
         return (s, e, i_s, i_a, r, d)
 
     def count_compartment_pop(self):
-        return tuple(map(lambda x: x * NUM_TO_BATCH, self.count_compartments()))
+        s = 0
+        e = 0
+        i_s = 0
+        i_a = 0
+        r = 0
+        d = 0
+        for i in self.individuals:
+            if i.compartment == Compartment.susceptible:
+                s += i.size
+            if i.compartment == Compartment.latent:
+                e += i.size
+            if i.compartment == Compartment.infectious_symptomatic:
+                i_s += i.size
+            if i.compartment == Compartment.infectious_asymptomatic:
+                i_a += i.size
+            if i.compartment == Compartment.recovered:
+                r += i.size
+            if i.compartment == Compartment.dead:
+                d += i.size
+        return (s, e, i_s, i_a, r, d)
 
     def update_history(self, t):
         s, e, i_s, i_a, r, d = self.count_compartment_pop()
@@ -270,8 +304,8 @@ class DiseaseModel:
     def update(self):
         s, e, i_s, i_a, r, d = self.count_compartment_pop()
         N = self.population
-        CONTACT_SYMPTOMATIC = (s / N) * (i_s / N)
-        CONTACT_ASYMPTOMATIC = (s / N) * (i_a / N)
+        CONTACT_SYMPTOMATIC = (s / N) * (i_s / N) * 2
+        CONTACT_ASYMPTOMATIC = (s / N) * (i_a / N) * 2
 
         # try:
         #     cpus = multiprocessing.cpu_count()
@@ -311,6 +345,11 @@ class HospitalNode:
         self.centroid = (float(info[2]), float(info[1]))
         self.bed_count = int(info[3])
 
+        if self.bed_count > TERTIARY_CARE_THRESHOLD:
+            self.tertiary = True
+        else:
+            self.tertiary = False
+
     def __str__(self):
         return str("{} - {}".format(self.name, self.bed_count))
 
@@ -324,7 +363,7 @@ class HospitalNode:
 class NTAGraphNode:
     def __init__(self, info):
         # Info looks like ('Borough', 'NTA ID', 'NTA Name', 'Population', 'Centroid Lat', 'Centroid Long', 'Hospitalization Rate')
-        self.model = DiseaseModel(int(info[3]), info[1])
+        self.model = DiseaseModel(int(info[3]), info[1], float(info[6]))
         # Tuple (lat, long)
         self.centroid = (float(info[4]), float(info[5]))
         self.info = info
@@ -351,7 +390,9 @@ class NTAGraphNode:
 
         # Calculating distance to each hospital
         self.hospital_distances = {
-            h.name: round(self.distance_in_km(h.centroid), 4) for h in hospitals
+            h.name: round(self.distance_in_km(h.centroid), 4)
+            for h in hospitals
+            if not h.tertiary
         }
 
     def distance_in_km(self, other_point):
@@ -458,7 +499,23 @@ class Simulation:
     def write_out_history(self):
         with open("simulation-results.csv", "w") as f:
             for n in self.nodes.values():
-                f.write("{}|{}\n".format(n.id, n.model.history))
+                cleaned = {}
+                cleaned["S"] = [
+                    round(v) for v in n.model.history[Compartment.susceptible]
+                ]
+                cleaned["E"] = [round(v) for v in n.model.history[Compartment.latent]]
+                cleaned["I_S"] = [
+                    round(v)
+                    for v in n.model.history[Compartment.infectious_symptomatic]
+                ]
+                cleaned["I_A"] = [
+                    round(v)
+                    for v in n.model.history[Compartment.infectious_asymptomatic]
+                ]
+                cleaned["R"] = [
+                    round(v) for v in n.model.history[Compartment.recovered]
+                ]
+                f.write("{}|{}\n".format(n.id, cleaned))
 
     def run(self):
 
@@ -496,14 +553,6 @@ class Simulation:
 
             # Move flows back at the end of each day
             print("Moving Flows Back To Home NTAs...")
-            # for i in self.nodes:
-            #     while not all(p.home_nta == i for p in self.nodes[i].model.individuals):
-            #         for ind, o in enumerate(self.nodes[i].model.individuals):
-            #             if o.home_nta != i:
-            #                 val = self.nodes[i].model.individuals.pop(ind)
-            #                 self.nodes[o.home_nta].model.individuals.append(val)
-            #                 break
-
             for n_id in self.nodes:
                 # Build set of indices of nodes that don't belong
                 indices = {
@@ -526,14 +575,6 @@ class Simulation:
                 # Change list of origin individuals
                 self.nodes[n_id].model.individuals = home_indivs
 
-            # for node in self.nodes.values():
-            #     for i in node.model.individuals:
-            #         assert i.home_nta == node.id
-            # for ind, o in enumerate(self.nodes["QN20"].model.individuals):
-            #     if o.home_nta != self.nodes["QN20"].id:
-            #         print(o.home_nta)
-            #         raise ValueError
-
             [node.model.update_history(tick) for node in self.nodes.values()]
 
         total_nyc = self.aggregate_history()
@@ -551,9 +592,11 @@ class Simulation:
 
         fig.suptitle("Compartment Population vs Time")
 
-        print(self.nodes["SI48"].model.history)
+        # print(self.nodes["SI48"].model.history)
         # print(self.nodes["QN20"].hospital_distances)
         print(sorted([h.bed_count for h in self.hospitals]))
+        global TOTAL_HOSPITALIZED
+        print(TOTAL_HOSPITALIZED)
 
         self.write_out_history()
 
