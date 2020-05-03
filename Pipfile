@@ -16,6 +16,7 @@ geopy = "*"
 xlrd = "*"
 numba = "*"
 geoplot = "*"
+tuna = "*"
 
 [requires]
 python_version = "3.7"

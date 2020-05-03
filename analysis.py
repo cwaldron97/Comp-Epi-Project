@@ -7,6 +7,8 @@ import geoplot
 
 import matplotlib.pylab as pylab
 
+from pprint import pprint
+
 # import geoplot as gp
 
 
@@ -49,6 +51,12 @@ gdf2 = gpd.GeoDataFrame(
 
 NTAs_d = dict(gdf2)
 shape_d = dict(shape)
+
+shape_ids = list(zip(shape["ntacode"], shape["ntaname"]))
+nta_ids = set(NTAs["nta_code"])
+missing = {i[0]: i[1] for i in shape_ids if i[0] not in nta_ids}
+pprint(missing)
+
 for i, ntacode in NTAs_d["nta_code"].items():
     indexes = [k for k, v in shape_d["ntacode"].items() if ntacode == v]
     if indexes:
@@ -87,11 +95,12 @@ for index, ntacode in results[0].items():
         assert len(found) == 1
         loc = found.pop()
         new_NTAs["results"][loc] = results[1][index]
-        new_NTAs[BRACKET1][loc] = eval(results[1][index])["R"][NUM1]
+        new_NTAs[BRACKET1][loc] = eval(results[1][index])[][NUM1]
         new_NTAs[BRACKET2][loc] = eval(results[1][index])["R"][NUM2]
         new_NTAs[BRACKET3][loc] = eval(results[1][index])["R"][NUM3]
         new_NTAs[BRACKET4][loc] = eval(results[1][index])["R"][NUM4]
     else:
+        continue
         print(ntacode, results[0][index])
 
 NTAs_with_results = pd.DataFrame(new_NTAs)
