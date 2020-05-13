@@ -51,9 +51,11 @@ def read_hospital_data(filename):
 NTAs = read_nta_data("New York Pop NTA updated.csv")
 hospitals = read_hospital_data("NYC Hospital Locations Filled.csv")
 
-s = Simulation(NTAs, hospitals)
-
-s.run()
+# for restriction in [1.0, 0.75, 0.5, 0.25]:
+# for restriction in [1.0, 0.25]:
+for restriction in [1.0, 0.75, 0.5, 0.25]:
+    s = Simulation(NTAs, hospitals)
+    s.run(restriction)
 
 # for n_id, n in s.nodes.items():
 #     pop = n.model.population

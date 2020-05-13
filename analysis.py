@@ -69,30 +69,16 @@ new_NTAs = pd.DataFrame(NTAs_d)
 
 gdf3 = gpd.GeoDataFrame(new_NTAs, geometry=new_NTAs.geometry)
 
-results = dict(pd.read_csv("simulation-results.csv", sep="|", header=None))
+results = dict(
+    pd.read_csv("simulation-results_COVID_100_10_25%.csv", sep="|", header=None)
+)
 
-BRACKET1 = "day_7"
-BRACKET2 = "day_14"
-BRACKET3 = "day_21"
-BRACKET4 = "day_28"
-# BRACKET5 = "day_80"
-# BRACKET6 = "day_100"
-NUM1 = int(BRACKET1.split("_")[1]) - 1
-NUM2 = int(BRACKET2.split("_")[1]) - 1
-NUM3 = int(BRACKET3.split("_")[1]) - 1
-NUM4 = int(BRACKET4.split("_")[1]) - 1
-# NUM5 = int(BRACKET5.split("_")[1]) - 1
-# NUM6 = int(BRACKET6.split("_")[1]) - 1
+num_ticks = len(eval(results[1][0])["S"])
 
 new_NTAs["results"] = np.nan
-new_NTAs[BRACKET1] = np.nan
-new_NTAs[BRACKET2] = np.nan
-new_NTAs[BRACKET3] = np.nan
-new_NTAs[BRACKET4] = np.nan
-# new_NTAs[BRACKET5] = np.nan
-# new_NTAs[BRACKET6] = np.nan
+for i in range(num_ticks):
+    new_NTAs[f"day_{i}"] = np.nan
 new_NTAs = dict(new_NTAs)
-
 
 for index, ntacode in results[0].items():
     found = [i for i, v in new_NTAs["nta_code"].items() if ntacode == v]
@@ -100,12 +86,8 @@ for index, ntacode in results[0].items():
         assert len(found) == 1
         loc = found.pop()
         new_NTAs["results"][loc] = results[1][index]
-        new_NTAs[BRACKET1][loc] = eval(results[1][index])["I_S"][NUM1]
-        new_NTAs[BRACKET2][loc] = eval(results[1][index])["I_S"][NUM2]
-        new_NTAs[BRACKET3][loc] = eval(results[1][index])["I_S"][NUM3]
-        new_NTAs[BRACKET4][loc] = eval(results[1][index])["I_S"][NUM4]
-        # new_NTAs[BRACKET5][loc] = eval(results[1][index])["I_S"][NUM5]
-        # new_NTAs[BRACKET6][loc] = eval(results[1][index])["I_S"][NUM6]
+        for i in range(num_ticks):
+            new_NTAs[f"day_{i}"][loc] = eval(results[1][index])["I_S"][i]
     else:
         continue
         # print(ntacode, results[0][index])
@@ -116,59 +98,67 @@ gdf4 = gpd.GeoDataFrame(NTAs_with_results, geometry=NTAs_with_results.geometry)
 
 import mapclassify as mc
 
-scheme = mc.EqualInterval(gdf4[BRACKET3], k=8)
+m = 0
+max_ind = 0
+for i in range(num_ticks):
+    # new_m = max(gdf4[f"day_{i}"])
+    new_m = sum(gdf4[f"day_{i}"])
+    if new_m > m:
+        m = new_m
+        max_ind = i
+
+print(f"Peak Infected (Symptomatic): {m}\t Day: {max_ind}")
+
 proj = geoplot.crs.AlbersEqualArea()
-fig, axarr = plt.subplots(2, 2, figsize=(16, 16), subplot_kw={"projection": proj})
 
-geoplot.choropleth(
-    gdf4, hue=BRACKET1, linewidth=1, scheme=scheme, ax=axarr[0][0], legend=True,
+# bins = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+# scheme_bracket = f"day_{int(num_ticks / 2)}"
+# scheme = mc.UserDefined(gdf4[f"day_30"], bins)
+scheme = mc.EqualInterval(gdf4[f"day_{max_ind}"], k=16)
+
+total_resilient = 0
+total_susceptible = 0
+total_population = 0
+for nta_results in gdf4["results"]:
+    total_resilient += eval(nta_results)["R"][num_ticks - 1]
+    total_susceptible += eval(nta_results)["S"][num_ticks - 1]
+    total_population += (
+        eval(nta_results)["S"][0]
+        + eval(nta_results)["I_S"][0]
+        + eval(nta_results)["I_A"][0]
+        + eval(nta_results)["E"][0]
+        + eval(nta_results)["R"][0]
+    )
+# print(f"Total Suscepible: {total_susceptible}")
+# print(f"Total Resilient: {total_resilient}")
+print(
+    f"Population of NYC Infected by Day {num_ticks}: {total_resilient / total_population}"
 )
-axarr[0][0].set_title("Day {}".format(NUM1 + 1), fontsize=10)
 
-geoplot.choropleth(
-    gdf4, hue=BRACKET2, linewidth=1, scheme=scheme, ax=axarr[0][1], legend=False,
-)
-axarr[0][1].set_title("Day {}".format(NUM2 + 1), fontsize=10)
+for i in range(num_ticks):
+    geoplot.choropleth(
+        gdf4,
+        hue=f"day_{i}",
+        linewidth=0.5,
+        scheme=scheme,
+        legend=True,
+        legend_kwargs={"loc": "upper left", "fontsize": "xx-large"},
+        projection=proj,
+        figsize=(16, 16),
+        edgecolor="black",
+    )
+    plt.title(f"Day {i+1}", fontsize=36)
 
-geoplot.choropleth(
-    gdf4, hue=BRACKET3, linewidth=1, scheme=scheme, ax=axarr[1][0], legend=False,
-)
-axarr[1][0].set_title("Day {}".format(NUM3 + 1), fontsize=10)
-
-geoplot.choropleth(
-    gdf4, hue=BRACKET4, linewidth=1, scheme=scheme, ax=axarr[1][1], legend=False,
-)
-axarr[1][1].set_title("Day {}".format(NUM4 + 1), fontsize=10)
-
-# geoplot.choropleth(
-#     gdf4, hue=BRACKET5, linewidth=1, scheme=scheme, ax=axarr[1][1], legend=False,
-# )
-# axarr[1][1].set_title("Day {}".format(NUM5 + 1), fontsize=10)
-
-# geoplot.choropleth(
-#     gdf4, hue=BRACKET6, linewidth=1, scheme=scheme, ax=axarr[1][2], legend=False,
-# )
-# axarr[1][2].set_title("Day {}".format(NUM6 + 1), fontsize=10)
-
-plt.subplots_adjust(top=0.85)
-plt.subplots_adjust(bottom=0.01)
-plt.subplots_adjust(left=0.01)
-plt.subplots_adjust(right=0.85)
-plt.subplots_adjust(hspace=0.01)
-plt.subplots_adjust(wspace=0.01)
-plt.suptitle("Size of 'Infectious (Symptomatic)' Compartment Over Time", fontsize=14)
-
-fig = plt.gcf()
-plt.savefig("quad-chloropleth.png", bbox_inches="tight", pad_inches=0.1)
-
-# geoplot.choropleth(
-#     gdf3,
-#     projection=geoplot.crs.AlbersEqualArea(),
-#     hue="hospitalization_rate",
-#     cmap="Greens",
-#     legend=True,
-#     edgecolor="black",
-#     linewidth=1,
-# )
-
-plt.show()
+    # plt.subplots_adjust(top=0.75)
+    # plt.subplots_adjust(bottom=0.03)
+    # plt.subplots_adjust(left=0.03)
+    # plt.subplots_adjust(right=0.75)
+    # plt.subplots_adjust(hspace=0.03)
+    # plt.subplots_adjust(wspace=0.03)
+    # plt.suptitle("Size of 'Infectious (Symptomatic)' Compartment Over Time", fontsize=14)
+    fig = plt.gcf()
+    if i < 9:
+        plt.savefig(f"choropleth/day_0{i+1}.png", bbox_inches="tight", pad_inches=0.1)
+    else:
+        plt.savefig(f"choropleth/day_{i+1}.png", bbox_inches="tight", pad_inches=0.1)
+    plt.close()

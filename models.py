@@ -11,15 +11,15 @@ import multiprocessing
 
 
 # Number of days to run the simulation for
-NUM_TICKS = 60
+NUM_TICKS = 100
 BOUND = NUM_TICKS
-NUM_TO_BATCH = 50
+NUM_TO_BATCH = 10
 TERTIARY_CARE_THRESHOLD = 60  # 62, 85, 85, 99, 161 are the highest bed counts
 
-# AVG_LATENCY_PERIOD = 5.1
-# AVG_INFECTIOUS_PERIOD = 13.25
-AVG_LATENCY_PERIOD = 1.1
-AVG_INFECTIOUS_PERIOD = 2.5
+AVG_LATENCY_PERIOD = 5.1
+AVG_INFECTIOUS_PERIOD = 13.25
+# AVG_LATENCY_PERIOD = 1.1
+# AVG_INFECTIOUS_PERIOD = 2.5
 CONSTANTS = {
     "beta": 0.8383,
     "epsilon": 1 / AVG_LATENCY_PERIOD,
@@ -32,22 +32,23 @@ CONSTANTS = {
 }
 
 # Slider for the hospital distance radius, social distancing factor, and travel radius
-MOVEMENT_RESTRICTION = 0.5
+MOVEMENT_RESTRICTION = 1.0
 # MOVEMENT_RESTRICTION = 0.5
 
 # The proportion of the individuals in an NTA will actually move to other NTAs during a given day
-BASE_MOVEMENT_FACTOR = 0.5
+BASE_MOVEMENT_FACTOR = 0.4
 I_S_MOVEMENT_FACTOR = BASE_MOVEMENT_FACTOR * 0.5
 I_A_MOVEMENT_FACTOR = BASE_MOVEMENT_FACTOR
 
 # Parameter scaling transmissibility depending on the season we wish to model
-SEASONALITY_FACTOR = 1
+SEASONALITY_FACTOR = 1.0
 
 # Percent asymptomatic carriers (when seeding)
 PERCENT_ASYMPTOMATIC = 0.5
 
 # Temp variable to estimate hospitalizations
 TOTAL_HOSPITALIZED = 0
+TOTAL_DEAD = 0
 
 
 class Compartment(Enum):
@@ -78,7 +79,7 @@ def make_compartment_charts(df, ax, title):
         t,
         df[Compartment.susceptible],
         markerfacecolor="blue",
-        markersize=6,
+        markersize=8,
         color="skyblue",
         linewidth=2,
         label="Susceptible",
@@ -86,9 +87,9 @@ def make_compartment_charts(df, ax, title):
     ax.plot(
         t,
         df[Compartment.latent],
-        markerfacecolor="yellow",
-        markersize=6,
-        color="yellow",
+        markerfacecolor="purple",
+        markersize=8,
+        color="purple",
         linewidth=2,
         label="Latent",
     )
@@ -96,7 +97,7 @@ def make_compartment_charts(df, ax, title):
         t,
         df[Compartment.infectious_symptomatic],
         markerfacecolor="red",
-        markersize=6,
+        markersize=8,
         color="red",
         linewidth=2,
         label="Infectious (Symptomatic)",
@@ -105,7 +106,7 @@ def make_compartment_charts(df, ax, title):
         t,
         df[Compartment.infectious_asymptomatic],
         markerfacecolor="orange",
-        markersize=6,
+        markersize=8,
         color="orange",
         linewidth=2,
         label="Infectious (Asymptomatic)",
@@ -114,15 +115,15 @@ def make_compartment_charts(df, ax, title):
         t,
         df[Compartment.recovered],
         markerfacecolor="green",
-        markersize=6,
+        markersize=8,
         color="green",
         linewidth=2,
         label="Recovered",
     )
     # plt.xlabel("Day")
     # plt.ylabel("# in Compartment")
-    ax.legend()
-    ax.set_title(title)
+    # ax.legend()
+    ax.set_title(title, fontdict={"fontsize": 16, "fontweight": "medium"})
 
 
 class Individual:
@@ -132,23 +133,34 @@ class Individual:
         self.home_nta = nta_id
         self.size = size
         self.hospitalization_rate = hospitalization_rate
+        self.round_num = 5
+        self.multiplier = 10 ** self.round_num
 
     def transition(self, CONTACT_SYMPTOMATIC, CONTACT_ASYMPTOMATIC):
-        # if CONTACT_ASYMPTOMATIC > 0 or CONTACT_ASYMPTOMATIC > 0:
-        #     print(self.home_nta, CONTACT_ASYMPTOMATIC, CONTACT_ASYMPTOMATIC)
+        global TOTAL_DEAD
+
         if not (
             self.compartment == Compartment.dead
             or self.compartment == Compartment.recovered
         ):
             if self.compartment == Compartment.susceptible:
                 self.infect(CONTACT_ASYMPTOMATIC, CONTACT_SYMPTOMATIC)
-            if self.compartment == Compartment.latent:
+            elif self.compartment == Compartment.latent:
                 self.make_infectious()
-            if (
+            elif (
                 self.compartment == Compartment.infectious_symptomatic
                 or self.compartment == Compartment.infectious_asymptomatic
             ):
                 self.recover()
+            # elif self.compartment == Compartment.needs_hospitalization:
+            #     roll = randint(0, 10000)
+            # if roll < 500:
+            #     self.compartment = Compartment.dead
+            #     TOTAL_DEAD += NUM_TO_BATCH
+            # elif roll < 2500:
+            #     self.compartment = Compartment.recovered
+            # if roll < 2500:
+            #     self.compartment = Compartment.recovered
 
     def infect(self, CONTACT_SYMPTOMATIC, CONTACT_ASYMPTOMATIC):
         threshold1 = (
@@ -156,24 +168,20 @@ class Individual:
                 CONTACT_ASYMPTOMATIC
                 * CONSTANTS["beta"]
                 * CONSTANTS["rbeta"]
-                * SEASONALITY_FACTOR
-                # * (1 / NUM_TO_BATCH),
-                ,
-                5,
+                * SEASONALITY_FACTOR,
+                self.round_num,
             )
-            * 10000
+            * self.multiplier
         )
         threshold2 = (
             round(
-                CONTACT_SYMPTOMATIC * CONSTANTS["beta"] * SEASONALITY_FACTOR
-                # * (1 / NUM_TO_BATCH),
-                ,
-                5,
+                CONTACT_SYMPTOMATIC * CONSTANTS["beta"] * SEASONALITY_FACTOR,
+                self.round_num,
             )
-            * 10000
+            * self.multiplier
             + threshold1
         )
-        roll = randint(0, 10000)
+        roll = randint(0, self.multiplier)
 
         if roll < threshold1:
             self.compartment = Compartment.latent
@@ -182,29 +190,29 @@ class Individual:
 
     def make_infectious(self):
         threshold1 = (
-            # round(CONSTANTS["epsilon"] * CONSTANTS["pa"] * (1 / NUM_TO_BATCH), 5)
-            round(CONSTANTS["epsilon"] * CONSTANTS["pa"], 5)
-            * 10000
+            round(CONSTANTS["epsilon"] * CONSTANTS["pa"], self.round_num,)
+            * self.multiplier
         )
         threshold2 = (
-            round(CONSTANTS["epsilon"] * CONSTANTS["upa"], 5) * 10000
+            round(CONSTANTS["epsilon"] * CONSTANTS["upa"], self.round_num,)
+            * self.multiplier
         ) + threshold1
-        roll = randint(0, 10000)
+        roll = randint(0, self.multiplier)
 
         if roll < threshold1:
             self.compartment = Compartment.infectious_asymptomatic
         elif roll < threshold2:
             self.compartment = Compartment.infectious_symptomatic
-
-        global TOTAL_HOSPITALIZED
-        critical_threshold = round(self.hospitalization_rate, 3) * 100000
-        if randint(0, 100000) < critical_threshold:
-            TOTAL_HOSPITALIZED += NUM_TO_BATCH
+            global TOTAL_HOSPITALIZED
+            # critical_threshold = round(self.hospitalization_rate, 8) * (10 ** 8)
+            critical_threshold = round(0.2655, 8) * (10 ** 8)
+            if randint(0, (10 ** 8)) < critical_threshold:
+                # self.compartment = Compartment.needs_hospitalization
+                TOTAL_HOSPITALIZED += NUM_TO_BATCH
 
     def recover(self):
-        # threshold = round(CONSTANTS["mu"] * (1 / NUM_TO_BATCH), 5) * 10000
-        threshold = round(CONSTANTS["mu"], 5) * 10000
-        roll = randint(0, 10000)
+        threshold = round(CONSTANTS["mu"], self.round_num) * self.multiplier
+        roll = randint(0, self.multiplier)
 
         if roll < threshold:
             self.compartment = Compartment.recovered
@@ -276,6 +284,8 @@ class DiseaseModel:
         i_s = 0
         i_a = 0
         r = 0
+        nh = 0
+        h = 0
         d = 0
         for i in self.individuals:
             if i.compartment == Compartment.susceptible:
@@ -288,23 +298,29 @@ class DiseaseModel:
                 i_a += i.size
             if i.compartment == Compartment.recovered:
                 r += i.size
+            if i.compartment == Compartment.needs_hospitalization:
+                nh += i.size
+            if i.compartment == Compartment.hospitalized:
+                h += i.size
             if i.compartment == Compartment.dead:
                 d += i.size
-        return (s, e, i_s, i_a, r, d)
+        return (s, e, i_s, i_a, r, nh, h, d)
 
     def update_history(self, t):
-        s, e, i_s, i_a, r, d = self.count_compartment_pop()
+        s, e, i_s, i_a, r, nh, h, d = self.count_compartment_pop()
         self.history[Compartment.susceptible][t] = s
         self.history[Compartment.latent][t] = e
         self.history[Compartment.infectious_symptomatic][t] = i_s
         self.history[Compartment.infectious_asymptomatic][t] = i_a
         self.history[Compartment.recovered][t] = r
+        self.history[Compartment.needs_hospitalization][t] = nh
+        self.history[Compartment.hospitalized][t] = h
         self.history[Compartment.dead][t] = d
 
     def update(self):
-        s, e, i_s, i_a, r, d = self.count_compartment_pop()
+        s, e, i_s, i_a, r, nh, h, d = self.count_compartment_pop()
         N = self.population
-        CONTACT_SYMPTOMATIC = (s / N) * (i_s / N) * 2
+        CONTACT_SYMPTOMATIC = (s / N) * ((i_s + nh + h) / N) * 2
         CONTACT_ASYMPTOMATIC = (s / N) * (i_a / N) * 2
 
         # try:
@@ -399,7 +415,7 @@ class NTAGraphNode:
         return geodesic(self.centroid, other_point).meters / 1000
 
     def calculate_outflow(self):
-        s, e, i_s, i_a, r, _ = self.model.count_compartment_pop()
+        s, e, i_s, i_a, r, _, _, _ = self.model.count_compartment_pop()
 
         s *= BASE_MOVEMENT_FACTOR
         e *= BASE_MOVEMENT_FACTOR
@@ -408,6 +424,11 @@ class NTAGraphNode:
         r *= BASE_MOVEMENT_FACTOR
 
         max_distance = max(self.distances_normalized.values()) * MOVEMENT_RESTRICTION
+        # total_ds = len(self.distances_normalized.values())
+        # zeroed = len(
+        #     [d for d in self.distances_normalized.values() if d >= max_distance]
+        # )
+        # print(f"{zeroed} out of {total_ds} NTA destinations have been zeroed")
 
         linear_outflow = {
             n: {
@@ -462,7 +483,11 @@ class Simulation:
 
         # Seed nodes
         # Central location
+        nodes["QN19"].model.seed(1000)
         nodes["QN20"].model.seed(1000)
+        nodes["QN21"].model.seed(1000)
+        nodes["QN30"].model.seed(1000)
+        nodes["BK77"].model.seed(1000)
 
         return nodes
 
@@ -497,7 +522,10 @@ class Simulation:
         return h
 
     def write_out_history(self):
-        with open("simulation-results.csv", "w") as f:
+        with open(
+            f"simulation-results_COVID_{NUM_TICKS}_{NUM_TO_BATCH}_{int(MOVEMENT_RESTRICTION*100)}%.csv",
+            "w",
+        ) as f:
             for n in self.nodes.values():
                 cleaned = {}
                 cleaned["S"] = [
@@ -517,7 +545,9 @@ class Simulation:
                 ]
                 f.write("{}|{}\n".format(n.id, cleaned))
 
-    def run(self):
+    def run(self, movement_restriction):
+        global MOVEMENT_RESTRICTION
+        MOVEMENT_RESTRICTION = movement_restriction
 
         for tick in range(NUM_TICKS):
             print(
@@ -578,29 +608,35 @@ class Simulation:
             [node.model.update_history(tick) for node in self.nodes.values()]
 
         total_nyc = self.aggregate_history()
-        fig, axs = plt.subplots(2, 2)
-
-        make_compartment_charts(pd.DataFrame(total_nyc), axs[0][0], "All of NYC")
-
-        self.nodes["QN20"].model.plot_history(axs[0][1], "QN20 - Ridgewood (seed)")
-        self.nodes["SI48"].model.plot_history(
-            axs[1][0], "SI48 - Arden Heights (low pop)"
-        )
+        fig, axs = plt.subplots(3, 1, figsize=(16, 16))
+        self.nodes["QN20"].model.plot_history(
+            axs[0], "QN20 - Ridgewood (seed, Queens)"
+        )  # Ridgewood (seed)
+        self.nodes["SI07"].model.plot_history(
+            axs[1], "SI07 - Westerleigh (low pop, Staten Island)"
+        )  # Arden Heights (low pop)
         self.nodes["BK88"].model.plot_history(
-            axs[1][1], "BK88 - Borough Park (high pop)"
+            axs[2], "BK88 - Borough Park (high pop, Brooklyn)"
+        )  # Borough Park (high pop)
+
+        fig = plt.gcf()
+        plt.savefig(
+            f"results/specific_COVID_days_{NUM_TICKS}-batch_{NUM_TO_BATCH}-restr_{int(MOVEMENT_RESTRICTION*100)}%.png",
+            bbox_inches="tight",
+            pad_inches=0.1,
         )
+        plt.close()
 
-        fig.suptitle("Compartment Population vs Time")
-
-        # print(self.nodes["SI48"].model.history)
-        # print(self.nodes["QN20"].hospital_distances)
-        print(sorted([h.bed_count for h in self.hospitals]))
         global TOTAL_HOSPITALIZED
-        print(TOTAL_HOSPITALIZED)
+
+        fig, axs = plt.subplots(1, 1, figsize=(10, 10))
+        make_compartment_charts(pd.DataFrame(total_nyc), axs, "All of NYC")
+        fig = plt.gcf()
+        plt.savefig(
+            f"results/totalnyc_COVID_days_{NUM_TICKS}-batch_{NUM_TO_BATCH}-restr_{int(MOVEMENT_RESTRICTION*100)}%-hosp_{TOTAL_HOSPITALIZED}.png",
+            bbox_inches="tight",
+            pad_inches=0.1,
+        )
+        plt.close()
 
         self.write_out_history()
-
-        plt.show()
-
-        # print(total_nyc)
-        # print(self.nodes["QN20"].model.history)
