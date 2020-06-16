@@ -21,11 +21,9 @@ $ python main.py
 
 When VSCode asks to use an autoformatter, select `black`.
 
-## Top Priorities
-1. Construct updated model with described compartments in GLEAMviz
-2. Map out hospitals in correlation to NTA locations 
-3. Assign hospitals bed values and fill in missing Lat/Long coordinates
-4. Establish node characteristics and optimizing hospital priorization
+## Missing elements to expand on in the future
+1. More granular data points to model movement, specifically we need to see how people move during the day and what areas have higher population density at given times as that will effect when people move into hospitals.
+2. Implementing hospitals in a more meaningful way, currently they get unrealisitcally overwhelmed quickly as individual choices to enter a hospital are taken as batched rolls.
 
 ## Data Sources
 
